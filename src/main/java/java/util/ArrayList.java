@@ -95,6 +95,25 @@ import sun.misc.SharedSecrets;
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
+ *
+ * 常见问题 :
+ * 1. 如何复制一个 ArrayList 到另一个 ArrayList 中 ?
+ * (1). 使用 clone 技术, List newlist = oldList.clone(); (浅拷贝)
+ * (2). 使用构造方法, List newlist = new ArrayList(oldList); (浅拷贝)
+ * (3). 使用 addAll() 方法, List newList = new ArrayList(); newList.addAll(oldList); (浅拷贝)
+ * (4). 使用 Collections 的 copy 方法 (浅拷贝)
+ *
+ * 2. ArrayList 的大小是如何扩容的 ?
+ * 请参考 grow() 方法.
+ *
+ * 3. 需要线程安全怎么办 ?
+ * (1). 使用 Collections.synchronizedList(list); 方法
+ * (2). 使用 Vector
+ * (3). 使用 CopyOnWriteArrayList ???
+ *
+ * 4. 如何在遍历 list 的时候删除元素 ?
+ * 使用迭代器的 move 方法, iterator.remove();
+ *
  * @author  Josh Bloch
  * @author  Neal Gafter
  * @see     Collection
@@ -418,7 +437,9 @@ public class ArrayList<E> extends AbstractList<E>
      * allocated with the runtime type of the specified array and the size of
      * this list.
      *
-     * 返回一个包含
+     * 以正确的顺序返回一个包含所有元素的数组; 返回数组的运行时类型就是入参指定的数组类型.
+     * 如果当前集合适配入参数组(当前集合元素数量小于入参数组容量), 那么元素会被拷贝到入参数组中, 然后返回入参数组
+     * 否则, 一个新的数组空间会被创建, 新创建的数组的类型就是入参数组的类型, 长度是当前集合的长度
      *
      * <p>If the list fits in the specified array with room to spare
      * (i.e., the array has more elements than the list), the element in
@@ -427,7 +448,8 @@ public class ArrayList<E> extends AbstractList<E>
      * list <i>only</i> if the caller knows that the list does not contain
      * any null elements.)
      *
-     *
+     * 如果入参数组容量大于当前集合 (那么元素会被直接拷贝到入参数组中), 最后一个元素后面的值会被 set 为 null
+     * (如果调用者知道集合中不可能包含任何 null 值时, 这样做就很容器判断返回数组的实际元素数量)
      *
      * @param a the array into which the elements of the list are to
      *          be stored, if it is big enough; otherwise, a new array of the
@@ -505,7 +527,7 @@ public class ArrayList<E> extends AbstractList<E>
      * list. Shifts the element currently at that position (if any) and
      * any subsequent elements to the right (adds one to their indices).
      *
-     * 注意 add 方法和 set 方法的区别 !!!
+     * 注意该方法和 set(int index, E element) 方法的区别 !!!
      *
      * @param index index at which the specified element is to be inserted
      * @param element element to be inserted
@@ -560,12 +582,14 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public boolean remove(Object o) {
         if (o == null) {
+            // 可以看到, 是移除所有匹配成功的元素
             for (int index = 0; index < size; index++)
                 if (elementData[index] == null) {
                     fastRemove(index);
                     return true;
                 }
         } else {
+            // 可以看到, 是移除所有匹配成功的元素
             for (int index = 0; index < size; index++)
                 if (o.equals(elementData[index])) {
                     fastRemove(index);
@@ -578,6 +602,8 @@ public class ArrayList<E> extends AbstractList<E>
     /*
      * Private remove method that skips bounds checking and does not
      * return the value removed.
+     *
+     * 私有方法, 跳过了边界检查, 而且不会返回被移除的对象
      */
     private void fastRemove(int index) {
         modCount++;
@@ -597,7 +623,7 @@ public class ArrayList<E> extends AbstractList<E>
 
         // clear to let GC do its work
         for (int i = 0; i < size; i++)
-            elementData[i] = null;
+            elementData[i] = null; // capacity 不会变
 
         size = 0;
     }
@@ -611,6 +637,9 @@ public class ArrayList<E> extends AbstractList<E>
      * undefined if the specified collection is this list, and this
      * list is nonempty.)
      *
+     * 如果在此操作过程中指定集合(入参集合)被修改了，那么这个操作的行为是未定义的 ???? 啥是未定义的 ????
+     * (这表明 : 如果入参集合是当前集合, 并且当前集合非空, 那么此次调用的行为是未定义的 ???)
+     *
      * @param c collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
@@ -623,6 +652,8 @@ public class ArrayList<E> extends AbstractList<E>
         size += numNew;
         return numNew != 0;
     }
+
+    /* --------------------------------------------------- 此方法后面还没来得及看 -----------------------------------------------------*/
 
     /**
      * Inserts all of the elements in the specified collection into this
