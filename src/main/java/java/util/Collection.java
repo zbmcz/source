@@ -39,6 +39,10 @@ import java.util.stream.StreamSupport;
  * is typically used to pass collections around and manipulate them where
  * maximum generality is desired.
  *
+ * 在集合体系中本接口是 Root 级别的接口, 一个集合代表了一组对象, 即 elements.
+ * 有些集合允许重复的元素, 而有些集合不允许. 有些集合是有序的, 有些是无需的.
+ * JDK 没有提供任何该接口的实现类, JDK 提供了诸如 Set 和 List 这类子接口的实现类.
+ *
  * <p><i>Bags</i> or <i>multisets</i> (unordered collections that may contain
  * duplicate elements) should implement this interface directly.
  *
@@ -148,6 +152,8 @@ public interface Collection<E> extends Iterable<E> {
      * Returns the number of elements in this collection.  If this collection
      * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
      * <tt>Integer.MAX_VALUE</tt>.
+     *
+     * 返回集合中元素的数量, 如果集合中有超过 Integer.MAX_VALUE 数量的元素, 那么返回 Integer.MAX_VALUE
      *
      * @return the number of elements in this collection
      */
@@ -374,6 +380,8 @@ public interface Collection<E> extends Iterable<E> {
      * this collection will contain no elements in common with the specified
      * collection.
      *
+     * 移除当前集合与入参集合中交集那部分的全部元素
+     *
      * @param c collection containing elements to be removed from this collection
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call
@@ -398,12 +406,17 @@ public interface Collection<E> extends Iterable<E> {
      * predicate.  Errors or runtime exceptions thrown during iteration or by
      * the predicate are relayed to the caller.
      *
+     * 这个方法还是比较实用的, 让我回想起了使用 C# 的那段时光
+     *
      * @implSpec
      * The default implementation traverses all elements of the collection using
      * its {@link #iterator}.  Each matching element is removed using
      * {@link Iterator#remove()}.  If the collection's iterator does not
      * support removal then an {@code UnsupportedOperationException} will be
      * thrown on the first matching element.
+     *
+     * 在本方法中, 遍历所有元素的默认实现方法是使用集合的 iterator.
+     * 每一个匹配成功的元素会使用 iterator.remove() 方法进行移除, 如果集合的 iterator 不支持移除操作, 那么在移除第一个元素的时候就会抛出异常
      *
      * @param filter a predicate which returns {@code true} for elements to be
      *        removed
@@ -422,6 +435,7 @@ public interface Collection<E> extends Iterable<E> {
         while (each.hasNext()) {
             if (filter.test(each.next())) {
                 each.remove();
+                // 集合中只要有一个元素被移除, 那么该方法最终就会返回 true
                 removed = true;
             }
         }
@@ -433,6 +447,8 @@ public interface Collection<E> extends Iterable<E> {
      * specified collection (optional operation).  In other words, removes from
      * this collection all of its elements that are not contained in the
      * specified collection.
+     *
+     * 仅保留本集合中同样存在于入参集合中的元素. 换句话说, 移除本集合中不在入参集合中的元素.
      *
      * @param c collection containing elements to be retained in this collection
      * @return <tt>true</tt> if this collection changed as a result of the call
@@ -456,6 +472,8 @@ public interface Collection<E> extends Iterable<E> {
      * Removes all of the elements from this collection (optional operation).
      * The collection will be empty after this method returns.
      *
+     * 移除元素, 但不缩小 capacitu
+     *
      * @throws UnsupportedOperationException if the <tt>clear</tt> operation
      *         is not supported by this collection
      */
@@ -477,6 +495,9 @@ public interface Collection<E> extends Iterable<E> {
      * the implementor may wish to implement a "value comparison" in place of
      * the default "reference comparison."  (The <tt>List</tt> and
      * <tt>Set</tt> interfaces mandate such value comparisons.)<p>
+     *
+     * 虽然 Collection 接口声明的 equals 对于 Object.equals 方法没有增加任何额外的规定，但是直接实现 Collection 接口但非 Set 或者 List 的程序员如果复写了 Object.equals 方法的话，需要进行仔细测试
+     * 其实没有必要复写 Object.equals 方法，最简单的方法就是直接使用 Object 默认的实现方法，但程序员可能希望去实现一个 "值的比较" 而不是默认的 "引用比较" ??? (什么乱七八糟的)
      *
      * The general contract for the <tt>Object.equals</tt> method states that
      * equals must be symmetric (in other words, <tt>a.equals(b)</tt> if and
@@ -508,6 +529,9 @@ public interface Collection<E> extends Iterable<E> {
      * to satisfy the general contract for the <tt>Object.hashCode</tt> method.
      * In particular, <tt>c1.equals(c2)</tt> implies that
      * <tt>c1.hashCode()==c2.hashCode()</tt>.
+     *
+     * 和 Object.hashCode() 没区别，该声明没有增加任何规定 (重复声明接口方法可能只是为了方便)
+     * 程序员需要注意任何复写了 Object.equals 方法的类必须复写 Object.hashCode 方法，以便满足 Object.hashCode 方法的条款规定 (同样说的乱七八糟)
      *
      * @return the hash code value for this collection
      *
